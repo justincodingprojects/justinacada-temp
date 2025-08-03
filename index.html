@@ -81,11 +81,7 @@
       .btn.delete {
         background-color: var(--delete);
       }
-      /* OLD IMPORT/EXPORT BUTTONS */
-      /* #exportScheduleBtn,
-      #importJsonBtn {
-        padding: 10px 25px;
-      } */
+
       #saveScheduleBtn {
         padding: 10px 25px;
       }
@@ -376,7 +372,7 @@
           transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s ease,
           background 0.3s ease;
         user-select: none;
-        pointer-events: none; /* start hidden and non-interactive */
+        pointer-events: none; 
         z-index: 10001;
       }
       #toast.show {
@@ -390,7 +386,7 @@
         filter: brightness(1.1);
         cursor: pointer;
       }
-      /* Run View Styling */
+
       #runOverlay {
         position: fixed;
         top: 0;
@@ -469,7 +465,7 @@
         background: var(--delete);
         color: white;
       }
-      /* Options Sidebar */
+
       .sidebar {
         position: fixed;
         top: 0;
@@ -485,11 +481,11 @@
         box-shadow: -4px 0 20px rgba(0, 0, 0, 0.4);
         font-family: "Inter", sans-serif;
       }
-      /* When open */
+
       .sidebar.open {
         right: 0;
       }
-      /* Header */
+
       .sidebar-header {
         padding: 1rem;
         display: flex;
@@ -514,7 +510,7 @@
       .close-btn:hover {
         color: mediumspringgreen;
       }
-      /* Tabs */
+
       .sidebar-tabs {
         display: flex;
         border-bottom: 1px solid #2a2a2a;
@@ -538,7 +534,7 @@
         color: mediumspringgreen;
         border-bottom: 2px solid mediumspringgreen;
       }
-      /* Tab content */
+
       .tab-content {
         padding: 1rem;
         overflow-y: auto;
@@ -548,7 +544,7 @@
       .tab-content.hidden {
         display: none;
       }
-      /* Options toggle button */
+
       .options-toggle {
         position: fixed;
         bottom: 1.5rem;
@@ -607,7 +603,7 @@
         text-align: center;
         padding: 1rem;
       }
-      /* Overlay */
+
       .popup-overlay {
         position: fixed;
         inset: 0;
@@ -625,14 +621,14 @@
         opacity: 1;
         pointer-events: auto;
       }
-      /* Popup box */
+
       .popup-box {
         background: #1e1e1e;
         border-radius: 12px;
         box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15),
           0 4px 15px rgba(0, 0, 0, 0.1);
         width: 520px;
-        /* max-width: 90vw; */
+
         padding: 80px 28px;
         text-align: center;
         transform: scale(0.9);
@@ -644,20 +640,20 @@
         transform: scale(1);
         opacity: 1;
       }
-      /* Message */
+
       .popup-message {
         font-size: 1.5rem;
         color: white;
         margin-bottom: 24px;
         white-space: pre-line;
       }
-      /* Buttons container */
+
       .popup-actions {
         display: flex;
         justify-content: center;
         gap: 16px;
       }
-      /* Buttons */
+
       .popup-actions button {
         min-width: 110px;
         padding: 10px 20px;
@@ -671,7 +667,7 @@
         box-shadow: 0 4px 12px rgb(0 0 0 / 0.1);
         outline-offset: 2px;
       }
-      /* Confirm button */
+
       #popupConfirmBtn {
         background-color: #02aa69;
         color: #fff;
@@ -682,9 +678,9 @@
         box-shadow: 0 0 8px #029b60aa;
         outline: none;
       }
-      /* Cancel button */
+
       #popupCancelBtn {
-        /* background-color: #f0f0f0; */
+
         background-color: #dc3545;
         color: #fff;
       }
