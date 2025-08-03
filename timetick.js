@@ -1,12 +1,11 @@
 // TimeTick - Main Script
-
 let schedules = JSON.parse(localStorage.getItem("schedules") || "[]");
 let currentSchedule = [];
 let scheduleIsVerified = false;
 let editingIndex = null;
-let serverTimeOffset = 0; // ms offset serverTime - localTime
-let isBreakBlock = false; // tracks if currently showing a break block
-let queuedRealBlockIndex = null; // stores which block will run after break
+let serverTimeOffset = 0; 
+let isBreakBlock = false; 
+let queuedRealBlockIndex = null; 
 let isLiveRun = false;
 const suppressedPopups = new Set(
   JSON.parse(sessionStorage.getItem("suppressedPopups") || "[]")
@@ -25,15 +24,11 @@ const blockEnd = document.getElementById("blockEnd");
 const addBlockBtn = document.getElementById("addBlockBtn");
 const scheduleTableBody = document.getElementById("scheduleTableBody");
 const saveScheduleBtn = document.getElementById("saveScheduleBtn");
-// OLD EXPORT/IMPORT BUTTONS
-// const exportScheduleBtn = document.getElementById("exportScheduleBtn");
-// const importJsonBtn = document.getElementById("importJsonBtn");
-// const importJsonInput = document.getElementById("importJsonInput");
+
 const saveScheduleName = document.getElementById("saveScheduleName");
 const blockDropdown = document.getElementById("blockDropdown");
 const runDropdown = document.getElementById("styledDropdown");
 
-// Run Overlay elements
 const runOverlay = document.getElementById("runOverlay");
 const runLabel = document.getElementById("runLabel");
 const runCountdown = document.getElementById("runCountdown");
@@ -43,7 +38,6 @@ const runNextBtn = document.getElementById("nextRunBlock");
 const runSnapNowBtn = document.getElementById("snapToNow");
 const exitRunBtn = document.getElementById("exitRunView");
 
-// Sidebar elements
 const openBtn = document.getElementById("openOptionsBtn");
 const closeBtn = document.getElementById("closeOptionsBtn");
 const sidebar = document.getElementById("optionsSidebar");
@@ -51,7 +45,6 @@ const tabs = document.querySelectorAll(".tab");
 const tabContents = document.querySelectorAll(".tab-content");
 const clearToastHistoryBtn = document.getElementById("clear-toast-history-btn");
 
-// (NEW) Import/Export Buttons
 const dropdown = document.querySelector(".dropdown");
 const dropdownToggle = document.querySelector(".dropdown-toggle");
 const dropdownMenu = document.querySelector(".dropdown-menu");
@@ -59,14 +52,13 @@ const exportAllBtn = document.getElementById("exportAllSchedulesBtn");
 const importBtn = document.getElementById("importSingleScheduleBtn");
 const importFileInput = document.getElementById("importScheduleFileInput");
 
-// Toast Implementation (i'm too nerdy to use confirm() or SweetAlert2)
 const toast = document.getElementById("toast");
 const toastMessage = document.getElementById("toastMessage");
 const toastActions = document.getElementById("toastActions");
-const toastMultipliers = new Map(); // Tracks counts by message
+const toastMultipliers = new Map(); 
 let lastToastOptions = null;
 let runTimerTimeout = null;
-let activeRunIndex = 0; // Track currently displayed block index
+let activeRunIndex = 0; 
 
 const toastQueue = [];
 const toastHistory = [];
@@ -75,18 +67,15 @@ let toastActive = false;
 function showToast(message, options = {}) {
   const key = `${options.type || "info"}-${message}`;
 
-  // Check if it's already in queue or on screen
   const existing = toastMultipliers.get(key);
   if (existing) {
     existing.count++;
     toastMultipliers.set(key, existing);
 
-    // If it's currently active, update label and extend duration
     if (toastActive && toastMessage.textContent.includes(message)) {
       toastMessage.textContent = `${message} x${existing.count}`;
     }
 
-    // If it’s not active yet, update queued count (nothing else needed)
     return;
   }
 
@@ -107,8 +96,7 @@ function processNextToast() {
 
   const { message, options, key } = toastQueue.shift();
 
-  // Set toast type classes
-  toast.className = "toast"; // reset
+  toast.className = "toast"; 
   toastMessage.textContent = message;
   toast.classList.add("show");
 
@@ -132,7 +120,7 @@ function processNextToast() {
     const multiplier = toastMultipliers.get(key)?.count || 1;
     toastMessage.textContent =
       multiplier > 1 ? `${message} x${multiplier}` : message;
-    // Record toast in history
+
     const timestamp = new Date().toLocaleTimeString();
     toastHistory.unshift({
       message: multiplier > 1 ? `${message} x${multiplier}` : message,
@@ -153,7 +141,7 @@ function renderToastHistory() {
   const container = document.getElementById("toast-history-list");
   if (!container) return;
 
-  container.innerHTML = ""; // Clear current entries
+  container.innerHTML = ""; 
   clearToastHistoryBtn.classList.remove("hidden");
 
   if (toastHistory.length === 0) {
@@ -183,7 +171,7 @@ function addToastToHistory(message, options) {
   const item = document.createElement("div");
   item.className = "toast-history-item";
   item.textContent = `[${options.type || "info"}] ${message}`;
-  list.prepend(item); // newest at top
+  list.prepend(item); 
 }
 
 function hideToast() {
@@ -193,7 +181,6 @@ function hideToast() {
 function showConfirmPopup(message, onConfirm, onCancel, options = {}) {
   const key = options.key || message;
 
-  // If user previously opted to skip this message, immediately confirm and skip popup
   if (suppressedPopups.has(key)) {
     onConfirm?.();
     return;
@@ -210,10 +197,8 @@ function showConfirmPopup(message, onConfirm, onCancel, options = {}) {
   cancelBtn.innerText = "No";
   overlay.classList.remove("hidden");
 
-  // Reset checkbox on each popup show
   skipCheckbox.checked = false;
 
-  // Force repaint for CSS transition
   void overlay.offsetWidth;
 
   const close = () => overlay.classList.add("hidden");
@@ -240,7 +225,6 @@ function saveSuppressedPopups() {
   );
 }
 
-// Modal controls
 function openModal() {
   modalOverlay.classList.add("active");
 }
@@ -299,14 +283,12 @@ function addBlock() {
     });
   }
 
-  // Optional: warn on overlap
   const newStart = start ? parseTime(start) : null;
   const newEnd = parseTime(end);
   const overlaps = currentSchedule.some((block) => {
     const existingStart = block.start ? parseTime(block.start) : null;
     const existingEnd = parseTime(block.end);
 
-    // If no start time, assume block starts immediately
     const aStart = newStart || newEnd;
     const bStart = existingStart || existingEnd;
 
@@ -354,19 +336,18 @@ function renderScheduleTable() {
         newOrder.push(currentSchedule[originalIndex]);
       });
       currentSchedule = newOrder;
-      renderScheduleTable(); // Re-render to update indexes
+      renderScheduleTable(); 
     },
   });
 
   scheduleIsVerified = false;
-  document.getElementById("verifyResult")?.remove(); // Remove old status if any
+  document.getElementById("verifyResult")?.remove(); 
 }
 
 function updateBlock(index, field, value) {
   currentSchedule[index][field] = value;
   scheduleIsVerified = false;
 
-  // Optional: show a visual verification warning
   showToast("⚠️ Schedule changed. Please verify again.", { type: "warning" });
 }
 
@@ -386,9 +367,8 @@ function verifySchedule() {
   const tableBody = document.getElementById("scheduleTableBody");
   const rows = tableBody.querySelectorAll("tr");
 
-  let prevEnd = parseTime("00:00"); // start of schedule
+  let prevEnd = parseTime("00:00"); 
 
-  // Clear previous highlights
   rows.forEach((row) => row.classList.remove("invalid-row"));
 
   for (let i = 0; i < blocks.length; i++) {
@@ -462,41 +442,6 @@ function saveSchedule() {
   showToast("✅ Schedule saved!", { type: "success" });
 }
 
-// OLD IMPORT/EXPORT BUTTON FUNCTIONS
-/* function exportSchedule() {
-  if (!scheduleIsVerified) {
-    switchTab(1);
-    return showToast("⚠️ Please verify the schedule before exporting.", {
-      type: "warning",
-    });
-  }
-  if (currentSchedule.length === 0)
-    return showToast("❌ No blocks to export.", { type: "error" });
-  const name = saveScheduleName.value.trim() || "schedule";
-  const blob = new Blob([JSON.stringify(currentSchedule, null, 2)], {
-    type: "application/json",
-  });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = `${name}.json`;
-  a.click();
-  URL.revokeObjectURL(url);
-}
-
-function importSchedule(json) {
-  try {
-    currentSchedule = JSON.parse(json);
-    renderScheduleTable();
-    switchTab(1);
-    showToast("✅ Schedule imported", { type: "success" });
-    scheduleIsVerified = false;
-  } catch {
-    showToast("❌ Invalid JSON", { type: "error" });
-  }
-} */
-
-// NEW IMPORT/EXPORT BUTTON FUNCTIONS
 function exportAllSchedules() {
   const allSchedules = JSON.parse(localStorage.getItem("schedules") || "[]");
   dropdown.classList.remove("open");
@@ -580,7 +525,6 @@ function deleteSchedule(index) {
   });
 }
 
-// Utility: parse "HH:MM" into a Date object for today (server time synchronized)
 function parseTime(str) {
   const [h, m] = str.split(":").map(Number);
   const d = getServerNow();
@@ -588,12 +532,10 @@ function parseTime(str) {
   return d;
 }
 
-// Get synchronized server time as Date
 function getServerNow() {
   return new Date(Date.now() + serverTimeOffset);
 }
 
-// Get server time offset by sending HEAD request to current URL
 function synchronizeServerTime() {
   return new Promise((resolve) => {
     try {
@@ -612,7 +554,7 @@ function synchronizeServerTime() {
             serverTimeOffset = serverDate - localDate;
             resolve();
           } else {
-            // no server date header fallback
+
             serverTimeOffset = 0;
             resolve();
           }
@@ -629,8 +571,6 @@ function synchronizeServerTime() {
     }
   });
 }
-
-// Run Schedule Logic
 
 function inferStartTimes(schedule) {
   const now = getServerNow();
@@ -651,7 +591,7 @@ function inferStartTimes(schedule) {
 
 function populateRunDropdown() {
   const dropdown = document.getElementById("styledDropdown");
-  dropdown.innerHTML = ""; // Clear old entries
+  dropdown.innerHTML = ""; 
 
   const now = getServerNow();
 
@@ -662,13 +602,12 @@ function populateRunDropdown() {
     const label = block.label || `Run Block ${index + 1}`;
     option.textContent = label;
 
-    // const start = block.__inferredStart || now;
     const end = parseTime(block.end);
 
     const isCompleted = now >= end;
 
     if (isCompleted) {
-      option.classList.add("disabled"); // Add styling for disabled items
+      option.classList.add("disabled"); 
       option.dataset.disabled = "true";
     }
 
@@ -724,7 +663,6 @@ function runSchedule(index) {
 
   currentSchedule = schedule.blocks;
 
-  // Find current active block based on server time
   const now = getServerNow();
 
   let currentIdx = -1;
@@ -742,9 +680,9 @@ function runSchedule(index) {
   }
 
   if (currentIdx === -1) {
-    // No active block right now, start from first block or show ended message
+
     currentIdx = 0;
-    // Optional: If now > last block end, consider schedule ended and close run view immediately
+
     const lastEnd = parseTime(currentSchedule[currentSchedule.length - 1].end);
     if (now >= lastEnd) {
       showToast("Schedule has ended.", { type: "info" });
@@ -787,7 +725,7 @@ function updateRunBlock(index) {
   const start = block.__inferredStart || now;
   const end = parseTime(block.end);
   const totalSeconds = Math.max(0, (end - start) / 1000);
-  // Prevent showing break blocks unless in live mode
+
   if (isLiveRun && start && now < start) {
     showBreakUntil(index);
     return;
@@ -796,7 +734,6 @@ function updateRunBlock(index) {
   isBreakBlock = false;
   queuedRealBlockIndex = null;
 
-  // If block already passed, jump to next
   if (end - now <= 0) {
     updateRunBlock(index + 1);
     return;
@@ -840,8 +777,6 @@ function clearRunTimer() {
   }
 }
 
-// Run view controls
-
 runPrevBtn.addEventListener("click", () => {
   const now = getServerNow();
   const end = activeRunIndex !== 0 ? parseTime(currentSchedule[activeRunIndex - 1].end) : null;
@@ -868,7 +803,7 @@ runNextBtn.addEventListener("click", () => {
 });
 
 runSnapNowBtn.addEventListener("click", () => {
-  // Snap to current active block according to current server time
+
   const now = getServerNow();
   isLiveRun = true;
 
@@ -916,25 +851,13 @@ exitRunBtn.addEventListener("click", () => {
   clearRunTimer();
 });
 
-// Event Listeners for Modal & Buttons
-
 modalCloseBtn.onclick = closeModal;
 addScheduleBtn.onclick = openModal;
 tabLinks.forEach((btn, i) => (btn.onclick = () => switchTab(i)));
 addBlockBtn.onclick = addBlock;
 verifyScheduleBtn.onclick = verifySchedule;
 saveScheduleBtn.onclick = saveSchedule;
-// OLD IMPORT/EXPORT BUTTONS FUNCTIONALITY
-/* exportScheduleBtn.onclick = exportSchedule;
-importJsonBtn.onclick = () => importJsonInput.click();
-importJsonInput.onchange = (e) => {
-  const file = e.target.files[0];
-  if (file) {
-    const reader = new FileReader();
-    reader.onload = (e) => importSchedule(e.target.result);
-    reader.readAsText(file);
-  }
-}; */
+
 openBtn.addEventListener("click", () => sidebar.classList.add("open"));
 closeBtn.addEventListener("click", () => sidebar.classList.remove("open"));
 tabs.forEach((tab) => {
@@ -969,7 +892,7 @@ document.addEventListener("click", (e) => {
   if (!e.target.closest(".btn-group-dropdown"))
     runDropdown.classList.remove("show");
 });
-// NEW EXPORT/IMPORT BUTTONS FUNCTIONALITY
+
 exportAllBtn.onclick = exportAllSchedules;
 importBtn.onclick = () => importFileInput.click();
 importFileInput.onchange = (e) => {
@@ -1012,7 +935,6 @@ runDropdown.addEventListener("click", (e) => {
 
 renderSavedSchedules();
 
-// Synchronize server time on load
 synchronizeServerTime().then(() => {
   console.log("Server time synchronized, offset (ms):", serverTimeOffset);
 });
