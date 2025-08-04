@@ -10,6 +10,7 @@ let isLiveRun = false;
 const suppressedPopups = new Set(
   JSON.parse(sessionStorage.getItem("suppressedPopups") || "[]")
 );
+let chromebookMode = sessionStorage.getItem("chromebookMode");
 
 const savedSchedulesList = document.getElementById("savedSchedulesList");
 const modalOverlay = document.getElementById("modalOverlay");
@@ -28,6 +29,7 @@ const saveScheduleBtn = document.getElementById("saveScheduleBtn");
 const saveScheduleName = document.getElementById("saveScheduleName");
 const blockDropdown = document.getElementById("blockDropdown");
 const runDropdown = document.getElementById("styledDropdown");
+const chromebookModeCheckbox = document.getElementById("chromebookModeCheckbox");
 
 const runOverlay = document.getElementById("runOverlay");
 const runLabel = document.getElementById("runLabel");
@@ -51,6 +53,26 @@ const dropdownMenu = document.querySelector(".dropdown-menu");
 const exportAllBtn = document.getElementById("exportAllSchedulesBtn");
 const importBtn = document.getElementById("importSingleScheduleBtn");
 const importFileInput = document.getElementById("importScheduleFileInput");
+
+if (chromebookMode === null) {
+  if (navigator.userAgent.includes("CrOS")) {
+    chromebookMode = true;
+    sessionStorage.setItem("chromebookMode", JSON.stringify(true));
+  } else {
+    chromebookMode = false;
+    sessionStorage.setItem("chromebookMode", JSON.stringify(false));
+  }
+} else {
+  chromebookMode = JSON.parse(chromebookMode);
+}
+
+function chromebookModeFunc() {
+  if (chromebookMode) {
+    document.querySelector(".dropdown-content").style.maxHeight = "350%";
+  } else {
+    document.querySelector(".dropdown-content").style.maxHeight = "700%";
+  }
+}
 
 const toast = document.getElementById("toast");
 const toastMessage = document.getElementById("toastMessage");
@@ -692,6 +714,7 @@ function runSchedule(index) {
 
   activeRunIndex = currentIdx;
   runOverlay.style.display = "flex";
+  sidebar.classList.remove("open");
   inferStartTimes(currentSchedule);
   populateRunDropdown();
 
@@ -782,12 +805,12 @@ runPrevBtn.addEventListener("click", () => {
   const end = activeRunIndex !== 0 ? parseTime(currentSchedule[activeRunIndex - 1].end) : null;
   const isCompleted = end ? now >= end : null;
   isLiveRun = false;
-  if (isCompleted) {
+  if (isBreakBlock) {
+    updateRunBlock(activeRunIndex);
+  } else if (isCompleted) {
     showToast("Previous block is already completed", { type: "error" });
   } else if (activeRunIndex > 0) {
     updateRunBlock(activeRunIndex - 1);
-  } else if (isBreakBlock) {
-    updateRunBlock(activeRunIndex);
   } else {
     showToast("Already at first block", { type: "info" });
   }
@@ -795,7 +818,9 @@ runPrevBtn.addEventListener("click", () => {
 
 runNextBtn.addEventListener("click", () => {
   isLiveRun = false;
-  if (activeRunIndex < currentSchedule.length - 1) {
+  if (isBreakBlock) {
+    updateRunBlock(activeRunIndex);
+  } else if (activeRunIndex < currentSchedule.length - 1) {
     updateRunBlock(activeRunIndex + 1);
   } else {
     showToast("Already at last block", { type: "info" });
@@ -932,7 +957,14 @@ runDropdown.addEventListener("click", (e) => {
     duration: 1000,
   });
 });
+chromebookModeCheckbox.checked = chromebookMode;
+chromebookModeCheckbox.onchange = () => {
+  chromebookMode = chromebookModeCheckbox.checked;
+  sessionStorage.setItem("chromebookMode", JSON.stringify(chromebookModeCheckbox.checked));
+  chromebookModeFunc();
+}
 
+chromebookModeFunc();
 renderSavedSchedules();
 
 synchronizeServerTime().then(() => {
